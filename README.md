@@ -1,12 +1,23 @@
-Forge-Template
+# Crunchooooor
 
-Minimal template for Forge projects.
+Crunchooooor is a (WIP) smart contract that (todo: tokenizes? and) rewards Create2Crunchooooors by paying out bounties to whoever crunches the most efficient address for a smart contract deployed via CREATE2.
 
-Minor tweaks include
-- Updated `.gitignore` to include
-  - all files starging with `.`
-  - the `broadcast` directory (for better or worse)
-  - `lcov.info` and the `html` folder associated with local coverage reports
-- Includes (this) `README.md` file
-- Includes `.vscode` directory that specifies `forge` as the default formatter
-- `.github/test.yml` is configured to run `forge test` on push and pull requests, not just dispatch
+Anyone can create a bounty for an efficient CREATE2 address, and anyone can pitch in to increase that bounty. Bounties have a time limit, and once it has ended, the reward is paid out to the highest scoring submitter or, if none, returned to the bounty creator (note: including any extra pitched in by other users).
+
+(TODO: and maybe a token is minted of the smart contract address)
+
+The scoring formula is as follows:
+
+```
+S = L^2 + T
+```
+
+
+Where
+- S is the total score
+- L is the number of leading zero bytes in the address
+- T is the total number of zero bytes in the address
+
+Submitters must first submit a commitment hash and wait at least one minute. The hash is validated upon submission of the salt used to derive the address. This prevents front-running of efficient salt submission to steal bounties.
+
+To prevent gaming of the time window, a commitment expires after 5 minutes.
