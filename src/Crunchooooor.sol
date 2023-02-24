@@ -7,6 +7,34 @@ import { Create2AddressDeriver } from
 import { SafeTransferLib } from "solady/utils/SafeTransferLib.sol";
 import { CommitReveal } from "./lib/CommitReveal.sol";
 
+/**
+ * @title Crunchooooor
+ * @author emo.eth
+ * @author CupOJoseph.eth
+ * @notice Crunchooooor is a (WIP) smart contract that (todo: tokenizes? and)
+ * rewards Create2Crunchooooors by paying out bounties to whoever crunches the
+ * most efficient address for a smart contract deployed via CREATE2.
+ *
+ * Anyone can create a bounty for an efficient CREATE2 address, and anyone can
+ * pitch in to increase that bounty. Bounties have a time limit, and once it has
+ * ended,
+ * the reward is paid out to the highest scoring submitter or, if none, returned
+ * to the bounty creator
+ * (note: including any extra pitched in by other users).
+ * TODO: and maybe a token is minted of the smart contract address
+ *
+ * The scoring formula is as follows:
+ * S = L^2 + T
+ * Where
+ * - S is the total score
+ * - L is the number of leading zero bytes in the address
+ * - T is the total number of zero bytes in the address
+ *
+ * Submitters must first submit a commitment hash and wait at least one minute.
+ * The hash is validated upon submission of the salt used to derive the address.
+ * This prevents front-running of efficient salt submission to steal bounties.
+ * To prevent gaming of the time window, a commitment expires after 5 minutes.
+ */
 contract Crunchooooor is CommitReveal {
     error CrunchInProgress(uint256 crunchId);
     error CrunchEnded(uint256 crunchId);
@@ -31,6 +59,8 @@ contract Crunchooooor is CommitReveal {
         0x0000000000FFe8B47B3e2130213B802212439497;
 
     uint256 constant MINIMUM_COMMITMENT_DELAY = 1 minutes;
+    // toDO:
+    uint256 constant MAX_END_TIMESTAMP = 365 days;
 
     mapping(uint256 crunchId => CrunchParams) public crunches;
     mapping(uint256 crunchId => CrunchScore) public crunchLeaders;
@@ -66,7 +96,7 @@ contract Crunchooooor is CommitReveal {
         );
         _assertCommittedReveal(_computeCommitmentHash(addr, msg.sender));
 
-        (uint256 leading, uint256 total) = _countBytes(addr);
+        (uint256 leading, uint256 total) = _countZeroBytes(addr);
         uint256 score = _score(leading, total);
 
         CrunchScore memory currentScore = crunchLeaders[crunchId];
@@ -110,7 +140,7 @@ contract Crunchooooor is CommitReveal {
         SafeTransferLib.safeTransferETH(recipient, bounty);
     }
 
-    function _countBytes(address addr)
+    function _countZeroBytes(address addr)
         internal
         pure
         returns (uint256 numLeading, uint256 numTotal)

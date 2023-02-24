@@ -5,7 +5,7 @@ import { Crunchooooor } from "../../src/Crunchooooor.sol";
 
 contract TestCrunchooooor is Crunchooooor {
     function countBytes(address addr) public pure returns (uint256, uint256) {
-        return _countBytes(addr);
+        return _countZeroBytes(addr);
     }
 
     function score(uint256 leading, uint256 total)
